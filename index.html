@@ -466,7 +466,7 @@ const LEVELS=[];
   });
 })();
 
-let bodies,birds,bird,state,score,lvIdx=0,drag=null,trail=[],settleT=0,fx=[],fallen=[],shiftT=1;
+let bodies,birds,bird,pre=null,state,score,lvIdx=0,drag=null,trail=[],settleT=0,fx=[],fallen=[],shiftT=1;
 const STAY=.6,FADE=2.2; // seconds a spent hero stays on the field, then fades out
 
 let _id=0;
@@ -479,15 +479,18 @@ function load(i){
   lvt.textContent=L.world+' - المرحلة '+L.n;
   barf.style.width=(L.n/10*100)+'%';
   bodies=L.blocks.map(b=>mk(b[0],b[1],b[2],b[3],b[4]));
-  fx=[];fallen=[];birds=L.birds.slice();bird=null;score=0;state='aim';trail=[];settleT=0;
+  fx=[];fallen=[];birds=L.birds.slice();bird=null;pre=null;score=0;state='aim';trail=[];settleT=0;
   nextBird();hideMsg();bubL.innerHTML='';lastBub=0;
 }
+function makeHero(k){const h=HERO[k];return{k,h,x:SL.x-60,y:GY-24,vx:0,vy:0,a:0,av:0,ii:0,r:h.r,im:1/(h.d*h.r*h.r*3.14/1000),flying:false,used:false,age:0,hop:{t:0}}}
 function nextBird(){
+  if(pre){bird=pre;pre=null;state='aim';return} // already waiting at the sling
   if(!birds.length){bird=null;return}
-  const k=birds.shift(),h=HERO[k];
-  bird={k,h,x:SL.x-60,y:GY-24,vx:0,vy:0,a:0,av:0,ii:0,r:h.r,im:1/(h.d*h.r*h.r*3.14/1000),flying:false,used:false,age:0,hop:{t:0}};shiftT=0;
+  bird=makeHero(birds.shift());shiftT=0;
   state='aim';
 }
+// the next hero starts hopping to the sling as soon as the shot is released, without waiting for the field to calm
+function prepNext(){if(pre||!birds.length)return;pre=makeHero(birds.shift());shiftT=0}
 
 /* ---- balloon-pop effect ---- */
 function spawnPop(x,y){
@@ -726,7 +729,7 @@ cv.addEventListener('pointerup',()=>{
   if(!drag)return;drag=null;
   const dx=SL.x-bird.x,dy=SL.y-bird.y;
   if(Math.hypot(dx,dy)<14){bird.x=SL.x;bird.y=SL.y;return}
-  bird.vx=dx*POWER;bird.vy=dy*POWER;bird.flying=true;state='fly';trail=[];SFX.launch();
+  bird.vx=dx*POWER;bird.vy=dy*POWER;bird.flying=true;state='fly';trail=[];SFX.launch();prepNext();
 });
 function useAbility(){
   bird.used=true;
@@ -740,17 +743,18 @@ function hideMsg(){msg.style.display='none'}
 function foxesLeft(){return bodies.some(b=>b.fox)}
 function afterShot(){
   if(!foxesLeft()){
-    const left=birds.length,stars=left>=2?3:left===1?2:1;
+    const left=birds.length+(pre?1:0),stars=left>=2?3:left===1?2:1;
     SFX.win();window.onWin&&window.onWin(lvIdx,stars);showMsg('أحسنت! '+'★'.repeat(stars)+'☆'.repeat(3-stars),(()=>{const nx=LEVELS[lvIdx+1],lastOfWorld=!nx||nx.world!==LEVELS[lvIdx].world,rw=lastOfWorld&&REWARD[LEVELS[lvIdx].world];return (rw?'🎉 حرّرت '+rw.name+'! — ':'')+'النقاط: '+score})(),lvIdx<LEVELS.length-1?'المرحلة التالية':'العب من البداية',()=>{lvIdx=lvIdx<LEVELS.length-1?lvIdx+1:0;load(lvIdx)});
     state='end';return;
   }
-  if(!birds.length){SFX.lose();showMsg('حاول مرة أخرى','الثعالب ما زالت في الحصن','إعادة المحاولة',()=>load(lvIdx));state='end';return}
+  if(!birds.length&&!pre){SFX.lose();showMsg('حاول مرة أخرى','الثعالب ما زالت في الحصن','إعادة المحاولة',()=>load(lvIdx));state='end';return}
   nextBird();
 }
+function hopStep(o,dt){const h=o.hop;h.t+=dt;const k=Math.min(1,h.t/.45),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;o.x=SL.x-60+60*e;o.y=GY-24+(SL.y-(GY-24))*e-80*Math.sin(Math.PI*k);if(k>=1){o.x=SL.x;o.y=SL.y;o.hop=null}}
 function update(dt){
   if(state==='end')return;
   shiftT=Math.min(1,shiftT+dt/.45);
-  if(bird&&bird.hop){const h=bird.hop;h.t+=dt;const k=Math.min(1,h.t/.45),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;bird.x=SL.x-60+60*e;bird.y=GY-24+(SL.y-(GY-24))*e-80*Math.sin(Math.PI*k);if(k>=1){bird.x=SL.x;bird.y=SL.y;bird.hop=null}}
+  if(bird&&bird.hop)hopStep(bird,dt);if(pre&&pre.hop)hopStep(pre,dt);
   step(dt);
   if(state==='fly'&&bird){
     if(trail.length===0||Math.hypot(bird.x-trail[trail.length-1].x,bird.y-trail[trail.length-1].y)>22)trail.push({x:bird.x,y:bird.y});
@@ -824,6 +828,7 @@ function draw(){
   ctx.globalAlpha=1;ctx.fillStyle='#000';
   birds.forEach((k,i)=>{ctx.font='28px serif';ctx.textAlign='center';ctx.textBaseline='middle';if(!sprite(HERO[k].art,SL.x-60-i*42-42*(1-Math.min(1,shiftT)),GY-22,44))ctx.fillText(HERO[k].emoji,SL.x-60-i*38,GY-16)});
   if(bird){ctx.font=Math.round(bird.r*2.1)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';if(!sprite(bird.h.art,bird.x,bird.y-2,bird.r*3))ctx.fillText(bird.h.emoji,bird.x,bird.y+1)}
+  if(pre){ctx.font=Math.round(pre.r*2.1)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';if(!sprite(pre.h.art,pre.x,pre.y-2,pre.r*3))ctx.fillText(pre.h.emoji,pre.x,pre.y+1)}
   if(score!==shown){shown=score;scEl.textContent=score}
 }
 
