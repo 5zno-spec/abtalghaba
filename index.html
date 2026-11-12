@@ -6,6 +6,12 @@
 <title>أبطال الغابة</title>
 <meta name="description" content="لعبة «أبطال الغابة» — انضم إلى أبطال الغابة والعب الآن من المتصفح.">
 <meta name="theme-color" content="#1f3a24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="أبطال الغابة">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="أبطال الغابة">
 <meta property="og:locale" content="ar_AR">
@@ -124,6 +130,17 @@ button:focus-visible{outline:3px solid #ffd54f}
 #wtitle[data-w="3"]{--t1:#6eeadb;--t2:#1fa6b8;--t3:#14707d}
 @keyframes wsw{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(12deg) translateY(-3px)}}
 @keyframes wpop{0%{transform:scale(.6);opacity:.3}100%{transform:scale(1);opacity:1}}
+/* ---- install popup (glass) ---- */
+#inst{position:fixed;left:50%;bottom:clamp(16px,5vh,40px);z-index:60;width:min(86vw,300px);padding:20px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:26px;background:linear-gradient(135deg,rgba(47,125,58,.62),rgba(47,125,58,.3));-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.75);box-shadow:0 10px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.8);transform:translate(-50%,40px) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s .5s}
+#inst.on{transform:translate(-50%,0) scale(1);opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s}
+#inst img{width:min(30vmin,120px);height:auto;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.28))}
+#instx{position:absolute;top:8px;left:8px;width:34px;height:34px;min-width:0;padding:0;border-radius:50%;background:rgba(255,255,255,.6);color:#1d3a22;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+#instx:hover{background:#fff}
+#instx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
+#instb{min-width:0;width:100%;font-size:clamp(18px,3vmin,24px);padding:10px 20px}
+#insth{display:none;margin:0;text-align:center;color:#fff;font-weight:700;font-size:15px;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+#inst.hint #instb{display:none}#inst.hint #insth{display:block}
+@media (prefers-reduced-motion:reduce){#inst{transition:opacity .2s}}
 </style>
 </head>
 <body>
@@ -737,6 +754,7 @@ window.LV_COUNT=LEVELS.length;
 window.LV_WORLDS=[];for(let i=0;i<LEVELS.length;i++){const w=LEVELS[i].world;let g=window.LV_WORLDS.find(x=>x.name===w);if(!g)window.LV_WORLDS.push(g={name:w,idx:[]});g.idx.push(i)}
 })();
 </script>
+<div id="inst" role="dialog" aria-label="تثبيت اللعبة"><button id="instx" aria-label="إغلاق"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><img id="instlogo" alt="أبطال الغابة"><button class="mbtn" id="instb"><svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2z"/></svg><span>تثبيت</span></button><p id="insth">اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»</p></div>
 <script>
 const $=id=>document.getElementById(id);
 const store={get(){try{return JSON.parse(localStorage.getItem('abtal_prog')||'{}')}catch(e){return {}}},set(o){try{localStorage.setItem('abtal_prog',JSON.stringify(o))}catch(e){}}};
@@ -876,6 +894,33 @@ $('blv').onclick=()=>{$('shine').style.display='none';$('mpanel').style.display=
 $('bback').onclick=()=>{$('shine').style.display='';$('lpanel').style.display='none';$('mpanel').style.display='flex'};
 $('home').onclick=showMenu;
 setTimeout(()=>{const sp=$('splash');sp.classList.add('out');showMenu();setTimeout(()=>sp.remove(),700)},5000);
+</script>
+<script>
+(()=>{
+const inst=document.getElementById('inst'),menu=document.getElementById('menu');
+let dp=null,timer=null,due=false,closed=false;
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const KEY='abtal_inst_x';
+const dismissed=()=>{try{return Date.now()-(+localStorage.getItem(KEY)||0)<864e5}catch(e){return false}};
+const canShow=()=>!closed&&!standalone()&&!dismissed()&&(dp||ios)&&menu.classList.contains('vis');
+function show(){if(!canShow())return;document.getElementById('instlogo').src=document.getElementById('mlogo').src;inst.classList.add('on')}
+function hide(){inst.classList.remove('on')}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;if(due)show()});
+addEventListener('appinstalled',()=>{closed=true;dp=null;hide()});
+document.getElementById('instx').onclick=()=>{closed=true;hide();try{localStorage.setItem(KEY,Date.now())}catch(e){}};
+document.getElementById('instb').onclick=async()=>{
+  if(dp){const p=dp;dp=null;try{p.prompt();const r=await p.userChoice;if(r&&r.outcome==='accepted'){closed=true}}catch(e){}hide();return}
+  inst.classList.add('hint');
+};
+/* show 2 seconds after the second screen (menu) opens; hide it when the menu closes */
+new MutationObserver(()=>{
+  const vis=menu.classList.contains('vis');
+  if(vis&&!timer&&!due){timer=setTimeout(()=>{due=true;show()},2000)}
+  if(!vis)hide();
+}).observe(menu,{attributes:true,attributeFilter:['class']});
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+})();
 </script>
 </body>
 </html>
