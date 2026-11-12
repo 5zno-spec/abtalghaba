@@ -1,8 +1,9 @@
 // Offline support: every file of the game is saved when the service worker installs, so after
 // the first visit the game opens and plays with no internet.
-// Online, every file is fetched fresh first (with a 4-second limit) so updates arrive together;
-// if the network is down or too slow, the saved copy is used.
-const CACHE = 'abtal-v4';
+// Code files (page, scripts, styles) are checked online first (4-second limit) so updates arrive;
+// the server answers "unchanged" in a few bytes when nothing changed. Images rarely change, so they
+// come straight from the saved copy with no request at all (bump CACHE when an image changes).
+const CACHE = 'abtal-v5';
 const FILES = [
   './', './style.css', './viewport.js', './game.js', './menu.js', './install.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
@@ -13,7 +14,7 @@ const FILES = [
 
 self.addEventListener('install', e => e.waitUntil(
   caches.open(CACHE)
-    .then(c => Promise.all(FILES.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {}))))
+    .then(c => Promise.all(FILES.map(u => c.add(new Request(u, { cache: 'no-cache' })).catch(() => {}))))
     .then(() => self.skipWaiting())
 ));
 
@@ -26,6 +27,13 @@ self.addEventListener('fetch', e => {
   const r = e.request;
   if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
   const nav = r.mode === 'navigate';
+  if (/\/img\/[^/]+$/.test(new URL(r.url).pathname)) {
+    e.respondWith(caches.match(r, { ignoreSearch: true }).then(m => m || fetch(r).then(res => {
+      if (res.ok && res.type === 'basic') { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); }
+      return res;
+    })));
+    return;
+  }
   e.respondWith((async () => {
     const c = await caches.open(CACHE);
     const key = nav ? './' : r;
