@@ -114,10 +114,8 @@ button:focus-visible{outline:3px solid #ffd54f}
 
 #bubbles{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 .bub{position:absolute;transform:translate(-50%,-100%);padding:6px 14px;border-radius:18px;background:#fff;color:#2b2b2b;font-weight:800;font-size:clamp(15px,2.6vmin,22px);white-space:nowrap;direction:rtl;box-shadow:0 4px 12px rgba(0,0,0,.25);border:3px solid #ffd54f;animation:bubup 1.5s ease-out forwards}
-.bub::after{content:"";position:absolute;left:50%;bottom:-11px;width:14px;height:14px;background:#fff;border-right:3px solid #ffd54f;border-bottom:3px solid #ffd54f;transform:translateX(-50%) rotate(45deg)}
 .bub.big{font-size:clamp(19px,3.6vmin,30px);padding:8px 18px;border-color:#ff9800;background:linear-gradient(#fffdf0,#fff3c4)}
-.bub.big::after{border-color:#ff9800;background:#fff3c4}
-.bub.ch{border-color:#4fc3f7}.bub.ch::after{border-color:#4fc3f7}
+.bub.ch{border-color:#4fc3f7}
 @keyframes bubup{0%{opacity:0;margin-top:10px;scale:.4}14%{opacity:1;margin-top:0;scale:1.12}24%{scale:1}78%{opacity:1}100%{opacity:0;margin-top:-46px}}
 
 #lpanel #wtitle{display:flex;align-items:center;gap:14px;padding:6px 32px;border-radius:999px;font-size:clamp(24px,4.8vmin,40px);font-weight:900;color:#fff;letter-spacing:1px;-webkit-text-stroke:7px var(--t2,#2f9e44);paint-order:stroke fill;text-shadow:0 3px 0 rgba(0,0,0,.18);background:linear-gradient(var(--t1,#7ddc6e),var(--t2,#2f9e44));border:4px solid #fff;box-shadow:0 6px 0 var(--t3,#1f5a28),0 12px 24px rgba(0,0,0,.28);transition:background .5s}
@@ -483,9 +481,10 @@ function minorBubble(x,y){
 function foxBubble(b){
   lastBub=performance.now();
   const left=bodies.filter(q=>q.fox&&!q.dead).length;
-  praiseBubble(b.x,b.y,true);
-  if(left>0)setTimeout(()=>bubble(b.x,b.y-48,'🦊 بقي '+left+' — هل تقدر؟ 💪','ch'),450);
-  else setTimeout(()=>bubble(b.x,b.y-48,'🎉 فزت! أنت بطل 🏆','big'),450);
+  const top=b.y-(b.h||60)/2-24; // above the enemy, not coming out of it
+  praiseBubble(b.x,top,true);
+  if(left>0)setTimeout(()=>bubble(b.x,top-48,'🦊 بقي '+left+' — هل تقدر؟ 💪','ch'),450);
+  else setTimeout(()=>bubble(b.x,top-48,'🎉 فزت! أنت بطل 🏆','big'),450);
 }
 
 /* ---- damage ---- */
