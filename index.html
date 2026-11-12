@@ -129,14 +129,14 @@ button:focus-visible{outline:3px solid #ffd54f}
 @keyframes wsw{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(12deg) translateY(-3px)}}
 @keyframes wpop{0%{transform:scale(.6);opacity:.3}100%{transform:scale(1);opacity:1}}
 /* ---- install popup (glass) ---- */
-#inst{position:fixed;left:50%;bottom:clamp(16px,5vh,40px);z-index:60;width:min(86vw,300px);padding:20px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:26px;background:linear-gradient(135deg,rgba(47,125,58,.62),rgba(47,125,58,.3));-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.75);box-shadow:0 10px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.8);transform:translate(-50%,40px) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s .5s}
-#inst.on{transform:translate(-50%,0) scale(1);opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s}
-#inst img{width:min(30vmin,120px);height:auto;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.28))}
-#instx{position:absolute;top:8px;left:8px;width:34px;height:34px;min-width:0;padding:0;border-radius:50%;background:rgba(255,255,255,.6);color:#1d3a22;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18)}
-#instx:hover{background:#fff}
+#inst{position:fixed;left:50%;top:50%;z-index:60;width:min(86vw,300px);padding:20px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:26px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,255,255,.84));-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.95);box-shadow:0 12px 40px rgba(0,0,0,.3),inset 0 1px 0 #fff;transform:translate(-50%,calc(-50% + 40px)) scale(.94);opacity:0;visibility:hidden;pointer-events:none;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s .5s}
+#inst.on{transform:translate(-50%,-50%) scale(1);opacity:1;visibility:visible;pointer-events:auto;transition:transform .5s cubic-bezier(.2,1.2,.4,1),opacity .4s ease,visibility 0s}
+#inst img{width:min(30vmin,120px);height:auto;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+#instx{position:absolute;top:8px;left:8px;width:34px;height:34px;min-width:0;padding:0;border-radius:50%;background:rgba(0,0,0,.07);color:#1d3a22;display:flex;align-items:center;justify-content:center}
+#instx:hover{background:rgba(0,0,0,.14)}
 #instx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round}
 #instb{min-width:0;width:100%;font-size:clamp(18px,3vmin,24px);padding:10px 20px}
-#insth{display:none;margin:0;text-align:center;color:#fff;font-weight:700;font-size:15px;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+#insth{display:none;margin:0;text-align:center;color:#2b2a1e;font-weight:700;font-size:15px;line-height:1.6}
 #inst.hint #instb{display:none}#inst.hint #insth{display:block}
 @media (prefers-reduced-motion:reduce){#inst{transition:opacity .2s}}
 </style>
