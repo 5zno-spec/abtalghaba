@@ -750,14 +750,14 @@ function afterShot(){
 function update(dt){
   if(state==='end')return;
   shiftT=Math.min(1,shiftT+dt/.45);
-  if(bird&&bird.hop){const h=bird.hop;h.t+=dt;const k=Math.min(1,h.t/.65),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;bird.x=SL.x-60+60*e;bird.y=GY-24+(SL.y-(GY-24))*e-80*Math.sin(Math.PI*k);if(k>=1){bird.x=SL.x;bird.y=SL.y;bird.hop=null}}
+  if(bird&&bird.hop){const h=bird.hop;h.t+=dt;const k=Math.min(1,h.t/.45),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;bird.x=SL.x-60+60*e;bird.y=GY-24+(SL.y-(GY-24))*e-80*Math.sin(Math.PI*k);if(k>=1){bird.x=SL.x;bird.y=SL.y;bird.hop=null}}
   step(dt);
   if(state==='fly'&&bird){
     if(trail.length===0||Math.hypot(bird.x-trail[trail.length-1].x,bird.y-trail[trail.length-1].y)>22)trail.push({x:bird.x,y:bird.y});
-    const slow=Math.hypot(bird.vx,bird.vy)<25&&bird.y+bird.r>=GY-1;
+    const slow=Math.hypot(bird.vx,bird.vy)<30&&bird.age>.5; // stopped anywhere (ground or on debris)
     const calm=bodies.every(b=>Math.hypot(b.vx,b.vy)<12&&Math.abs(b.av)<.3);
-    if((slow||bird.age>9||bird.age>=99)&&calm){settleT+=dt}else settleT=0;
-    if(settleT>1||bird.age>=99||bird.age>14){settleT=0;if(bird.age<99&&bird.x>-OX&&bird.x<VW-OX)fallen.push({k:bird.k,x:bird.x,y:bird.y,t:0});bird=null;afterShot()}
+    if((slow||bird.age>4||bird.age>=99)&&calm){settleT+=dt}else settleT=0;
+    if(settleT>.5||bird.age>=99||bird.age>6){settleT=0;if(bird.age<99&&bird.x>-OX&&bird.x<VW-OX)fallen.push({k:bird.k,x:bird.x,y:bird.y,t:0});bird=null;afterShot()}
     else if(!foxesLeft()){settleT+=dt}
   }
 }
