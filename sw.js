@@ -3,9 +3,9 @@
 // Code files (page, scripts, styles) are checked online first (4-second limit) so updates arrive;
 // the server answers "unchanged" in a few bytes when nothing changed. Images rarely change, so they
 // come straight from the saved copy with no request at all (bump CACHE when an image changes).
-const CACHE = 'abtal-v5';
+const CACHE = 'abtal-v7';
 const FILES = [
-  './', './style.css', './viewport.js', './game.js', './menu.js', './install.js',
+  './', './style.css', './viewport.js', './sound.js', './game.js', './menu.js', './install.js', './nav.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   './img/logo.webp', './img/characters.webp', './img/plank.webp', './img/brick.webp', './img/sling.webp',
   './img/tree.webp', './img/joshua.webp', './img/mountain.webp', './img/rock1.webp', './img/rock2.webp',
