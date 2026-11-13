@@ -1,35 +1,34 @@
 // The phone's back button / back gesture goes to the previous screen instead of leaving the game:
 // level (or its win/lose window) → level map → main menu → (only then) leave.
-// While the player is anywhere but the main menu, one extra history entry is kept; pressing
-// back uses it up, and this file takes the player one screen back (re-adding it if needed).
+// One history entry is kept for each screen deeper than the main menu (map = 1, level = 2), and
+// they are added at the moment the player taps into that screen. Chrome on Android skips history
+// entries that a page adds without a tap, so entries are never re-added after a back press:
+// each press simply uses up one entry and this file shows the screen one step back.
 (()=>{
   const $=id=>document.getElementById(id);
-  const inst=$('inst'),menu=$('menu');
+  const menu=$('menu'),inst=$('inst');
   function depth(){
-    if(inst&&inst.classList.contains('on'))return 3;                 // install popup open
-    if($('bbk').style.display==='flex')return 2;                     // inside a level
-    if(menu.classList.contains('show')&&$('lpanel').style.display==='flex')return 1; // level map
-    return 0;                                                         // main menu
+    if($('bbk').style.display==='flex')return 2;                                      // inside a level
+    if(menu.classList.contains('show')&&$('lpanel').style.display==='flex')return 1;   // level map
+    return 0;                                                                          // main menu
   }
-  let held=false,quiet=false;
+  let count=0,quiet=0; // entries we added; back steps we triggered ourselves
   function sync(){
     const d=depth();
-    if(d>0&&!held){history.pushState({abtal:1},'');held=true}
-    // back on the main menu by tapping (not the back button): drop the spare entry so the
-    // next back press leaves right away instead of doing nothing
-    else if(d===0&&held){held=false;quiet=true;history.back()}
+    while(count<d){history.pushState({abtal:count+1},'');count++}
+    // went back with the game's own buttons: drop the spare entries so the phone's back button
+    // keeps matching the screens
+    if(count>d){const n=count-d;count=d;quiet++;history.go(-n)}
   }
   addEventListener('popstate',()=>{
-    if(quiet){quiet=false;return}
-    held=false;
+    if(quiet>0){quiet--;return}
+    count=Math.max(0,count-1);
+    if(inst&&inst.classList.contains('on'))$('instx').click();
     const d=depth();
-    if(d===3)$('instx').click();
-    else if(d===2)$('bbk').click();
+    if(d===2)$('bbk').click();
     else if(d===1)$('bback').click();
-    setTimeout(sync,0);
   });
   // watch the screens change, whichever button or code changed them
-  const mo=new MutationObserver(()=>sync());
-  for(const el of [menu,$('lpanel'),$('bbk'),inst])if(el)mo.observe(el,{attributes:true,attributeFilter:['class','style']});
-  sync();
+  const mo=new MutationObserver(()=>{if(!quiet)sync()});
+  for(const el of [menu,$('lpanel'),$('bbk')])mo.observe(el,{attributes:true,attributeFilter:['class','style']});
 })();
